@@ -5,7 +5,7 @@ date: "3/19/2015"
 output: html_document
 ---
 
-I have a document of Icterid data documententing many variables, including nest shape and plumage. The purpose was to analyze wether there is a correlation between nest shape and sexual dichromatism, which would indicate natural selection acting on the females, giving the females cryptic plumage. This study involved a phylogenetic tree which we gathered from previous papers. For this project, I am making my own phylogenetic tree for the family Icteridae. The following are my steps:
+I have a document of Icterid data documententing many variables, including nest shape and plumage. The purpose was to analyze wether there is a correlation between nest shape and sexual dichromatism, which would indicate natural selection acting on the females, giving the females cryptic plumage. This study involved a phylogenetic tree which we gathered from previous papers. For this project, I am making my own phylogenetic tree for the family Icteridae. All my files are at my github repository at https://github.com/thenathan/FinalProjectNB. The following are my steps:
 
 1. I saved the document as a comma deliminated file Icteridnestshape.txt, and uploaded it into my virtual machine. 
 
