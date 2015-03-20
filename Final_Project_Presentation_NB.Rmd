@@ -1,0 +1,278 @@
+---
+title: "EEB C177 Final Project"
+author: "Nathan Burroughs"
+date: "3/9/2015"
+output: ioslides_presentation
+---
+
+## The Icterids
+
+The Icterids are a family of birds also known as the New World blackbirds. They are a convenient clade to study because:
+
+- 109ish species = a good sample size
+- Lots of variation in coloration: both Monochromatic and Dichromatic species
+- Migratory and Sedentary species
+- Monogamous and Polygynous species
+- Various nesting habits
+- And other trait variation
+- Complete phylogenies have been constructed
+
+***It's a dope clade to study sexual dichromatism!***
+
+## Icterids and Nests
+
+![Icterid and nest](/home/vagrant/FinalProjectNB/Birdies.png)
+
+
+
+## Project Goal
+
+Construct a phylogeny of the Icterids
+
+## Step 1
+
+
+Save excel as csv
+
+```
+No.,Latin name (previous version),name change,Genus,species,Genus_species,notes $
+1,Psarocolius oseryi,clypicterus,Clypicterus,oseryi,Clypicterus_oseryi,"From Jar$
+2,Psarocolius decumanus,,Psarocolius,decumanus,Psarocolius_decumanus,,Crested Or$
+3,Psarocolius viridis,,Psarocolius,viridis,Psarocolius_viridis,,Green Oropendola$
+4,Psarocolius atrovirens,,Psarocolius,atrovirens,Psarocolius_atrovirens,,Dusky-g$
+5,Psarocolius angustifrons,,Psarocolius,angustifrons,Psarocolius_angustifrons,,R$
+6,Psarocolius alfredi,lumped with angustifrons,Psarocolius,alfredi,Psarocolius_a$
+7,Psarocolius wagleri,,Psarocolius,wagleri,Psarocolius_wagleri,,Chestnut-headed $
+8,Psarocolius montezuma,,Psarocolius,montezuma,Psarocolius_montezuma,,Montezuma $
+9,Psarocolius cassini,,Psarocolius,cassini,Psarocolius_cassini,NA,Baudo Oropendo$
+10,Psarocolius yuracares,lumped with bifasciatus,Psarocolius,yuracares,Psarocoli$
+```
+## Step 2
+
+Use Regular Expressions to extract genus and species names
+
+```{python}
+
+import re
+
+#open Icterid file
+
+icterid_file = "Icteridnestshape.txt"
+
+open_icterid = open(icterid_file)
+
+newoutput = []
+```
+
+## Step 2
+
+```{python}
+#Use regular expressions to find genus_species
+
+for line in open_icterid:
+    #print(line)
+    m = re.search("[A-Za-z]+_[A-Za-z]+", line)
+    #Use regular expressions to seperate genus and species
+    if m:
+        gs = m.group()
+        #print(gs)
+        mgenus = re.search("[A-Za-z]+", gs)
+        mspecies = re.search(r"[A-Za-z]+$", gs)
+        genus = mgenus.group()
+        species = mspecies.group()
+
+        output = open("genus_and_species.txt", "w")
+        output.write(genus + " " + species)
+        output.close()
+```
+
+## Step 2
+
+```{python}
+
+        #Save into a new vector
+        newoutput.append(genus + " " + species)
+open_icterid.close()
+
+#save new vector as a file
+f = open("gs2.txt", "w")
+for element in newoutput:
+    f.write(element + '\n')
+f.close
+```
+
+## Step 3
+
+Download biopython
+
+```
+$ sudo easy_install -f http://biopython.org/DIST/ biopython
+```
+
+## Step 4
+
+Scrape internet for DNA sequences of Icterids
+
+```{python}
+#Import from Biopython
+from Bio import Entrez
+from Bio import SeqIO
+
+Entrez.email = "thenathanburroughs@gmail.com"
+
+#puts Icteridae and CYTB into a variable
+search_string = "Icteridae AND CYTB"
+```
+
+## Step 4: Webscrape
+
+```{python}
+
+#Search and Read
+handle = Entrez.esearch(db="nucleotide", term=search_string, usehistory="y")
+record = Entrez.read(handle)
+handle.close()
+
+webenv = record["WebEnv"]
+query_key = record["QueryKey"]
+```
+
+## Step 4: Webscrape
+
+```{python}
+#Save ID list in gi_list and put number of IDs in count
+
+gi_list = record["IdList"]
+count = int(record["Count"])
+
+print ("Count: ", count)
+
+```
+
+## Step 4: Webscrape
+
+```{python}
+# Cached search, three genomes returned at a time in fasta format
+# Write the three into the file "icterid.fasta"
+
+batch_size = 3
+out_handle = open("icterid.fasta", "w")
+for start in range(0, count, batch_size):
+    end = min(count, start+batch_size)
+    fetch_handle = Entrez.efetch(db="nucleotide", rettype="fasta", retmode="text$
+    data = fetch_handle.read()
+    fetch_handle.close()
+    out_handle.write(data)
+out_handle.close()
+```
+
+## Step 4: Webscrape
+
+```
+>gi|564813690|gb|KF810929.1| Macroagelaius subalaris voucher LACM 40973 cyto$
+chrotochrome b (CYTB) gene, complete cds; mitochondrial
+ATGGCCCTAAACCTTCGTAAAAACCACCAAATCCTCAAAATCATCAATGACGCCTTAATCGATCTCCCAG
+CTCCATCAAACATCTCAACATGATGAAACTTCGGATCCCTACTAGGTGTCTGCTTAATCACTCAAATCAT
+CACAGGTCTTCTGCTAGCCATACACTACACAGCAGATACCAACCTAGCCTTCTCTTCCGTTGCCCACATA
+TGCCGAGACGTACAATTTGGCTGACTCATCCGCAATCTGCATGCAAACGGAGCCTCTTTCTTCTTCATCT
+GCATCTACCTACACATCGGCCGAGGCCTCTACTACGGCTCATACCTATACAAAGAAACCTGAAATGTAGG
+AGTCATCCTCCTCCTGGCCCTAATAGCAACTGCCTTCGTTGGATACGTCCTACCATGAGGACAAATATCA
+TTCTGAGGCGCTACCGTAATCACAAACCTATTTTCAGCTATCCCATACATCGGACAGACACTAGTCGAAT
+GAGCCTGAGGAGGATTCTCCGTCGACAACCCCACACTAACCCGATTCTTCGCCCTTCACTTCCTCCTCCC
+TTTCGTCATCGTAGGCCTCACCCTAGTACATCTAACCTTCCTCCACGAAACAGGATCAAACAACCCACTA
+GGCATCCCGCCGGACTGCGACAAAATCCCCTTCCACCCATACTACACCATCAAAGACATCTTAGGATTTG
+TCCTAATACTTTCCCTGCTTGTCTCACTAGCCCTATTCTCCCCCAATCTCCTAGGAGACCCAGAAAACTT
+CACCCCAGCCAACCCACTAACCACCCCTCCACACATCAAACCCGAATGATACTTCCTATTCGCTTACGCC
+ATCCTTCGATCCATCCCAAACAAACTAGGAGGCGTACTAGCCCTAGCCGCTTCAATCCTAGTCCTATTCC
+TCATCCCATACCTACACACATCAAAAATACGATCAATGACCTTCCGCCCTCTGTCACAGATCCTATTCTG
+AACCCTAGTCGCCAACATCCTTCTCCTAACTTGAGTAGGCAGCCAACCAGTAGAACACCCATTCATCATC
+ATTGGACAACTAGCCTCACTATCATACTTCACAATCATTTTAATTCTATTCCCCCTCGCGGCCGCTTTAG
+AGAATAAAATATTCAAATTCTAA
+
+>gi|564813688|gb|KF810928.1| Icterus auricapillus voucher FMNH 261843 cytochrome$
+ATGGCTCCCAACCTTCGTAAAAACCACCAAATCCTCAAAATCATCAACGACGCCCTAATCGACCTCCCAG
+CACCATCAAACATCTCAACATGATGAAACTTCGGGTCTCTACTGGGCATCTGCTTAGTCACTCAAATTGT
+```
+
+## step 5
+
+Align sequences: clustalw
+
+1. Choose sequence input
+2. Choose Multiple Alignments: Slow and Accurate
+
+![clustalw interface](/home/vagrant/FinalProjectNB/clustalw.png)
+
+
+## step 5
+
+
+Got an alignment file (called it i.aln)
+
+```
+gi|564813699|gb|KF810933.1|      -------ATGGCCCTCAACCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|564813697|gb|KF810932.1|      -------ATGGCCCTCAACCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|564813695|gb|KF810931.1|      -------ATGGCCCTCAATCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|564813690|gb|KF810929.1|      -------ATGGCCCTAAACCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|169387911|gb|EU442348.1|      -----------------------------------------------$
+gi|169387901|gb|EU442343.1|      -----------------------------------------------$
+gi|564014607|gb|KF823980.1|      ACAACCAATGGCCCCAAACATTCGAAAAAACCACCAAATCCTCAAAA$
+gi|564813692|gb|KF810930.1|      ATAACCAATGGCCCTCAACCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|430785662|gb|KC007567.1|      -------ATGGCCCTCAATCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|564813688|gb|KF810928.1|      -------ATGGCTCCCAACCTTCGTAAAAACCACCAAATCCTCAAAA$
+gi|564813684|gb|KF810926.1|      -------ATGGCCCTCAACCTTCGTAAAAACCACCGAATCCTCAAAA$
+gi|564813686|gb|KF810927.1|      -----------------------------------------------$
+gi|564813682|gb|KF810925.1|      -------ATGGCCCTCAACCTTCGTAAAAACCACCGAATCCTCAAAA$
+```
+
+## Step 5 (And 6?)
+
+Clustalw spits out a tree?
+
+```
+(
+(
+(
+(
+gi|564813699|gb|KF810933.1|:-0.02480,
+gi|564813697|gb|KF810932.1|:0.04809)
+:0.03754,
+gi|564813695|gb|KF810931.1|:0.00386)
+:0.02696,
+gi|564813690|gb|KF810929.1|:0.03586)
+:0.00485,
+(
+(
+gi|564813692|gb|KF810930.1|:0.00632,
+(
+gi|564014607|gb|KF823980.1|:-0.04031,
+(
+gi|169387911|gb|EU442348.1|:0.03994,
+gi|169387901|gb|EU442343.1|:0.05308)
+:0.09902)
+:0.03512)
+:0.01808,
+gi|430785662|gb|KC007567.1|:0.02196)
+:0.01851,
+(
+gi|564813688|gb|KF810928.1|:0.04076,
+(
+(
+gi|564813686|gb|KF810927.1|:-0.08360,
+gi|564813682|gb|KF810925.1|:0.21553)
+:0.12835,
+gi|564813684|gb|KF810926.1|:0.01057)
+:0.03033)
+:0.00981);
+```
+
+## Step 6 (Future steps)
+
+- Use R to visualize tree
+- Go back and either write a script that gets just CYTB and not full mitochonrdial chromosone or go through my fasta file and pull out just the CYTB. (Then align these)
+
+## Thanks
+
+![clustalw interface](/home/vagrant/FinalProjectNB/birds2.png)
+
+
